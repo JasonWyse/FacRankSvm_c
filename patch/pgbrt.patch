@@ -1,0 +1,108 @@
+diff -urp pgbrt/scripts/compiletest.py pgbrt-new/scripts/compiletest.py
+--- pgbrt/scripts/compiletest.py	2012-08-23 01:32:52.000000000 +0800
++++ pgbrt-new/scripts/compiletest.py	2013-07-01 10:37:07.696198604 +0800
+@@ -80,7 +80,15 @@ bool parseFeatureValue(string &cfeature,
+     
+     // tok is feature:value
+ 	string bit = tok;
++	if (bit[0] == '#') return false;
+ 	int colon_index = bit.find(":");
++	
++	// return empty value if colon is missing
++	if (colon_index == bit.npos){
++        cfeature = bit;
++        cvalue = string();
++        return true;
++	}
+ 	cfeature = bit.substr(0, colon_index);
+ 	cvalue = bit.substr(colon_index+1,bit.length()-colon_index-1);
+ 	
+diff -urp pgbrt/source/FeatureData.h pgbrt-new/source/FeatureData.h
+--- pgbrt/source/FeatureData.h	2011-09-17 03:22:31.000000000 +0800
++++ pgbrt-new/source/FeatureData.h	2013-06-30 20:53:44.069808357 +0800
+@@ -311,6 +311,7 @@ bool FeatureData::parseFeatureValue(stri
+     
+     // find colon
+ 	string bit = tok;
++	if (bit[0] == '#') return false;
+ 	int colon_index = bit.find(":");
+ 	
+ 	// return empty value if colon is missing
+diff -urp pgbrt/source/main.cpp pgbrt-new/source/main.cpp
+--- pgbrt/source/main.cpp	2011-09-17 03:22:42.000000000 +0800
++++ pgbrt-new/source/main.cpp	2013-06-30 20:53:44.069808357 +0800
+@@ -71,7 +71,7 @@ int main(int argc, char* argv[]) {
+     }
+     
+     // if good args, print parameters
+-    if (a.isRoot) print_args(a);
++//    if (a.isRoot) print_args(a);
+     
+     // run and exit
+     run(a);
+@@ -129,7 +129,7 @@ InstanceData* readtestdata(args_t a, con
+ 
+ void printmetricsheader(args_t a) {
+     // write train metrics header
+-    printf("#iteration,train_rmse");
++//    printf("#iteration,train_rmse");
+     if (a.computeRankingMetrics) printf(",train_err,train_ndcg");
+     
+     // write validation metrics header
+@@ -225,6 +225,14 @@ void run(args_t a) {
+     InstanceData* test = NULL;
+     if (a.useTestSet) test = readtestdata(a, a.testFile, a.sizeTestFile);
+     
++    long long ns_temp,s_temp,clock_s,clock_ns;
++    struct timespec clocker1,clocker2;
++	if (a.isRoot)
++	{
++		clock_s=0;
++		clock_ns=0;
++		clock_gettime(CLOCK_REALTIME,&clocker1);
++	}
+     // construct tree
+     StaticTree* tree = new StaticTree(a.maxDepth);
+     
+@@ -232,7 +240,7 @@ void run(args_t a) {
+     if (a.isRoot and a.time) printtime("initialization");
+     
+     // print metrics header
+-    if (a.isRoot) printmetricsheader(a);
++//    if (a.isRoot) printmetricsheader(a);
+     
+     // construct trees
+     for (int i=0; i<a.numTrees; i++) {
+@@ -254,12 +262,31 @@ void run(args_t a) {
+         if (a.useTestSet) tree->updatePredictions(test, a.learningRate);
+                 
+         // compute and print metrics
+-        if (i % 10 == 0) computemetrics(a, train, valid, test, i);
++//        if (i % 10 == 0) computemetrics(a, train, valid, test, i);
+         
+         // print tree time
+         if (i % 100 == 99 and a.isRoot and a.time) printtime("trees");
+     }
+     
++	if (a.isRoot)
++	{
++		clock_gettime(CLOCK_REALTIME,&clocker2);
++		ns_temp = clocker2.tv_nsec-clocker1.tv_nsec;
++		s_temp = clocker2.tv_sec - clocker1.tv_sec;
++		if (ns_temp < 0)
++		{
++			ns_temp += 1000000000;
++			s_temp--;
++		}
++		clock_s += s_temp;
++		clock_ns += ns_temp;
++		if (clock_ns>=1000000000)
++		{
++		  clock_s += clock_ns / 1000000000;
++		  clock_ns %= 1000000000;
++		}
++		fprintf(stderr,"Total boosting training time = %g\n",double(clock_s)+double(clock_ns)/double(1000000000.0));
++	}
+     // destroy tree
+     delete tree;
+     

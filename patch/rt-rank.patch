@@ -1,0 +1,140 @@
+diff -urp rt-rank.original/cart/forest.cpp rt-rank.exp/cart/forest.cpp
+--- rt-rank.original/cart/forest.cpp	2011-02-11 03:57:45.000000000 +0800
++++ rt-rank.exp/cart/forest.cpp	2013-02-24 19:06:11.000000000 +0800
+@@ -1,8 +1,10 @@
+ //forest.cpp
+ 
+ #include "forest.h"
++#include <time.h>
++#include <stdio.h>
+ 
+-
++double total;
+ void randsample(const vector<tuple*>& data, vector<tuple*>& s) {
+   int n = data.size(), i;
+   for (i=0; i < n; i++)
+@@ -60,6 +62,11 @@ void random_forest_p(const data_t& train
+     numthreads = trees;
+   trees = (trees / numthreads) * numthreads;
+ 
++  long long ns_temp,s_temp,clock_s,clock_ns;
++  clock_s=0;
++  clock_ns=0;
++  struct timespec clocker1,clocker2;
++  clock_gettime(CLOCK_REALTIME,&clocker1);
+   int trees_per_thread = trees / numthreads;  
+   thread** threads = new thread*[numthreads];
+ 
+@@ -84,6 +91,22 @@ void random_forest_p(const data_t& train
+   }
+   fprintf(stderr, "done threading\n");
+   delete[] threads;
++  clock_gettime(CLOCK_REALTIME,&clocker2);
++  ns_temp = clocker2.tv_nsec-clocker1.tv_nsec;
++  s_temp = clocker2.tv_sec - clocker1.tv_sec;
++  if (ns_temp < 0)
++  {
++	  ns_temp += 1000000000;
++	  s_temp--;
++  }
++  clock_s += s_temp;
++  clock_ns += ns_temp;
++  if (clock_ns>=1000000000)
++  {
++	  clock_s += clock_ns / 1000000000;
++	  clock_ns %= 1000000000;
++  }
++  printf("Total time = %g\n",double(clock_s)+double(clock_ns)/double(1000000000.0));
+ 
+   // congregate results of the threads
+   for (i = 0; i < numthreads; i++)
+diff -urp rt-rank.original/cart/main.cpp rt-rank.exp/cart/main.cpp
+--- rt-rank.original/cart/main.cpp	2011-02-11 03:57:45.000000000 +0800
++++ rt-rank.exp/cart/main.cpp	2013-02-24 19:05:20.000000000 +0800
+@@ -1,7 +1,7 @@
+ //main.cpp
+ 
+ #include "main.h"
+-
++#include <time.h>
+ #define REG
+ //#define FAST
+ 
+@@ -49,7 +49,12 @@ int main(int argc, char* argv[]) {
+     // single regression tree
+     int N = train.size();
+     if (myargs.alg == ALG_BOOST || myargs.alg == ALG_REGRESSION) {
++		long long ns_temp,s_temp,clock_s,clock_ns;
++		clock_s=0;
++		clock_ns=0;
++		struct timespec clocker1,clocker2;
+       for (int T = 0; T < myargs.trees; T++) {
++		clock_gettime(CLOCK_REALTIME,&clocker1);
+ 	// make tree
+ 	#ifdef REG
+ 	dt_node* t = new dt_node(train, myargs, myargs.depth, 1, myargs.kfeatures, false, myargs);
+@@ -68,6 +73,21 @@ int main(int argc, char* argv[]) {
+ 	for (i=0; i<N; i++)
+ 	  train[i]->target = train[i]->label - train_preds[i];
+ 	if (myargs.verbose) fprintf(stderr, "%d,%f", T, (float)train_rmse);
++	  clock_gettime(CLOCK_REALTIME,&clocker2);
++	  ns_temp = clocker2.tv_nsec-clocker1.tv_nsec;
++	  s_temp = clocker2.tv_sec - clocker1.tv_sec;
++	  if (ns_temp < 0)
++	  {
++		  ns_temp += 1000000000;
++		  s_temp--;
++	  }
++	  clock_s += s_temp;
++	  clock_ns += ns_temp;
++	  if (clock_ns>=1000000000)
++	  {
++		  clock_s += clock_ns / 1000000000;
++		  clock_ns %= 1000000000;
++	  }
+       
+ 	// classify test data
+ 	for (i=0; i<myargs.num_test; i++) {
+@@ -100,6 +120,7 @@ int main(int argc, char* argv[]) {
+ 	if (myargs.verbose) fprintf(stderr, "\n");
+       }
+ 
++	  printf("Total boosting training time = %g\n",double(clock_s)+double(clock_ns)/double(1000000000.0));
+       // write final predictions
+       for (i=0; i<myargs.num_test; i++) {
+ 	tuple::write_to_file(test_preds[i], test[i], myargs.test_outs[i]);
+Only in rt-rank.exp/cart: main.cpp~
+diff -urp rt-rank.original/cart/tuple.cpp rt-rank.exp/cart/tuple.cpp
+--- rt-rank.original/cart/tuple.cpp	2011-02-11 03:57:45.000000000 +0800
++++ rt-rank.exp/cart/tuple.cpp	2013-02-24 19:18:02.000000000 +0800
+@@ -34,6 +34,8 @@ int tuple::read_input(vector<tuple*>& da
+     while (tok = strtok(training ? NULL : tok ? NULL : line, " \n")) { // tok is feature:value
+       string bit = tok;
+       int colon_index = bit.find(":");
++	  if (colon_index <=0)
++		  break;
+       string feature = bit.substr(0, colon_index);
+       string value = bit.substr(colon_index+1, bit.length()-colon_index-1);
+ 
+diff -urp rt-rank.original/cart/tuple.h rt-rank.exp/cart/tuple.h
+--- rt-rank.original/cart/tuple.h	2011-02-11 03:57:45.000000000 +0800
++++ rt-rank.exp/cart/tuple.h	2013-01-01 16:32:17.000000000 +0800
+@@ -61,14 +61,16 @@ public:
+   }
+ 
+   void write_to_file(ofstream& out) {
+-    out << pred << " qid:" << qid << " blah" << endl;
++//    out << pred << " qid:" << qid << " blah" << endl;
++    out << pred<<endl;
+   }
+ 
+   static void write_to_file(const vector<double>& preds, const vector<tuple*>& data, char* outfile) {
+     ofstream out(outfile);
+     int i, N=preds.size();
+     for(i=0; i<N; i++) 
+-      out << preds[i] << " qid:" << data[i]->qid << " blah" << endl;
++      //out << preds[i] << " qid:" << data[i]->qid << " blah" << endl;
++      out << preds[i] << endl;
+   }
+ 
+   static double* read_default_features(char* file, int f) {

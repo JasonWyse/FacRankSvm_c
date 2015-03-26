@@ -1,0 +1,123 @@
+diff -urp RankSVM.original/rlscore/Core.py RankSVM.exp/rlscore/Core.py
+--- RankSVM.original/rlscore/Core.py	2011-06-14 00:16:32.000000000 +0800
++++ RankSVM.exp/rlscore/Core.py	2013-10-21 13:42:41.424741394 +0800
+@@ -128,6 +128,7 @@ def loadCore(parameters, input_file, out
+     variable_type_file = []
+     for varname in input_file.keys():
+         filename = input_file[varname]
++        rpool[varname] = filename
+         if DataSources.VARIABLE_TYPES.has_key(varname):
+             vartype = DataSources.VARIABLE_TYPES[varname]
+         else:
+diff -urp RankSVM.original/rlscore/learner/L2Optimizer.py RankSVM.exp/rlscore/learner/L2Optimizer.py
+--- RankSVM.original/rlscore/learner/L2Optimizer.py	2011-06-10 16:52:40.000000000 +0800
++++ RankSVM.exp/rlscore/learner/L2Optimizer.py	2013-10-21 13:42:41.424741394 +0800
+@@ -68,7 +68,7 @@ class PrimalDualOptimizer(object):
+         G = spmatrix(valz, rcoordz, ccoordz)
+         h = spmatrix(1., [numvar], [0])
+         h = cm(h)
+-        
++        cvxopt.solvers.options['show_progress'] = False
+         p_dict = cvxopt.solvers.qp(P, q, G=G, h=h)
+         #print p_dict['status']
+         xx = p_dict['x']
+@@ -79,4 +79,4 @@ class PrimalDualOptimizer(object):
+         for i in range(len(self.bundle)):
+             W = W+float(-xx[i]/self.lamb)*self.bundle[i]
+         return W
+-    
+\ No newline at end of file
++    
+diff -urp RankSVM.original/rlscore/learner/RankBundle.py RankSVM.exp/rlscore/learner/RankBundle.py
+--- RankSVM.original/rlscore/learner/RankBundle.py	2011-06-14 00:16:32.000000000 +0800
++++ RankSVM.exp/rlscore/learner/RankBundle.py	2013-10-21 13:45:59.576734941 +0800
+@@ -1,15 +1,20 @@
+ #A simple bundle solver for regularized empirical risk
+ #minimization. Used for RankSVM training. Requires cvxopt
+ 
++import time,sys
+ import AbstractSupervisedLearner
+ import L2Optimizer
+ from .. import DataSources
+ from numpy import zeros
+ from numpy import mat
++from numpy import array
++import numpy
+ from numpy.linalg import norm
+ import RankSVM
++import subprocess
+ from .. import Model
+ from scipy import sparse
++import os
+ 
+ class RLS(AbstractSupervisedLearner.RLS):
+ 
+@@ -31,7 +36,7 @@ class RLS(AbstractSupervisedLearner.RLS)
+         if self.resource_pool.has_key('max_iterations'):
+             self.maxiter = int(self.resource_pool['max_iterations'])
+         else:
+-            self.maxiter = 500
++            self.maxiter = 10000
+         if DataSources.TIKHONOV_REGULARIZATION_PARAMETER in self.resource_pool:
+             self.regparam = float(self.resource_pool[DataSources.TIKHONOV_REGULARIZATION_PARAMETER])
+             assert self.regparam > 0
+@@ -110,6 +115,7 @@ class RLS(AbstractSupervisedLearner.RLS)
+         else:
+             self.loss = RankSVM.DenseRankSVMLoss(self.X, self.Y, self.indslist)
+             print "Dense data"
++        start = time.clock()
+         self.regularizer = L2Regularizer(regparam)
+         self.optimizer = L2Optimizer.PrimalDualOptimizer(regparam, self.X.shape[0])
+         t = 0
+@@ -119,7 +125,13 @@ class RLS(AbstractSupervisedLearner.RLS)
+         lbound_loss = None
+         W_best = None
+         loss, a = self.loss.loss_gradient(w)
++        total = time.clock()-start
++        new = (loss+self.regularizer.value(w))
++        print self.resource_pool['test_set']
+         while e_t> self.e and t< self.maxiter:
++            old = new
++            new = 0
++            start=time.clock()
+             t = t+1
+             b = loss-(w.T*a)[0,0]
+             self.optimizer.add_bundle(a, b)
+@@ -140,18 +152,37 @@ class RLS(AbstractSupervisedLearner.RLS)
+             print "iteration", t
+             print ubound_loss
+             print lbound_loss
++            total += time.clock()-start
++            new = ubound_loss
++            print "iter", t, "f",old,"act",old-new
++            print "Time",total
+             print "epsilon tolerance:", e_t
+             print "termination at", self.e
+             print "***********"
++            self.current_w=W_best
++            sys.stdout.flush()
++            self.do_eval()
+         self.resource_pool["iteration_count"] = t
+         print self.loss.loss(W_best)+self.regularizer.value(W_best)
+         print "norm of learned weight vector", norm(W_best)
++        if t >= self.maxiter:
++            print "Max iteration", self.maxiter, "reached."
+         self.A = W_best
+ 
+ 
+     def getModel(self):
+         return Model.LinearModelWithBias(self.A, 0.)
+         
++    def do_eval(self):
++        if DataSources.TEST_LABELS_VARIABLE not in self.resource_pool:
++            return
++        mod = Model.LinearModelWithBias(self.current_w,0.)
++        pred = mod.predictFromPool(self.resource_pool)
++        pred = array(pred).reshape(pred.shape[0],)
++        fname = self.resource_pool['train_set']+str(self.regparam)+'.out'
++        numpy.savetxt(fname,pred)
++        os.system('./eval %s %s'%(fname,self.resource_pool['test_set']))
++        os.system('rm '+ fname)
+ 
+ 
+ class L2Regularizer(object):

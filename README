@@ -1,0 +1,241 @@
+This directory includes sources used in the following paper:
+
+Ching-Pei Lee and Chih-Jen Lin, Large-scale Linear RankSVM, 2013.
+You will be able to regenerate experiment results in the paper. However,
+results may be slightly different due to the randomness, the CPU speed,
+and the load of your computer.
+
+Please cite the above article if you find this tool useful. Please also read
+the COPYRIGHT before using this tool.
+
+
+System Requirement
+==================
+This experiment is supposed to be run on UNIX machines. The following
+commands are required:
+- UNIX commands (mv, ln, cp, cat, patch, etc)
+- bash
+- g++
+- wget
+- make
+- python2.6 or newer versions except python 3.x.
+- MATLAB
+
+
+Introduction
+============
+You can choose solvers/data sets/criteria for comparisons. See descriptions in
+subsequent sections. We implement Tree-Tron and PRSVM+. Other solvers must be
+downloaded from their web sites. To obtain function values, testing pairwise
+accuracy/ndcg and training time after each iteration, we provide patches and
+you need to apply them.
+Please note that most experiments are very time consuming. Finishing all of
+them may cost more than one week.
+
+
+Compare Different Order-statistic Trees and the Direct Counting Method
+======================================================================
+Edit 'figure4.py' to indicate solvers and data for comparison. Remove the
+solvers and Data sets that you are not interested in. For example, change
+
+data = ['MSLR','YAHOO_SET1','MQ2007-list','MQ2008-list']
+
+to
+
+data = ['MSLR','YAHOO_SET1']
+
+In the same way, you can exclude some solvers from comparison. For
+example, change
+
+methodlist = ['direct-count','y-rbtree','wx-rbtree','selectiontree','y-avltree','y-aatree']
+
+to
+
+methodlist = ['direct-count','y-rbtree','wx-rbtree']
+
+After deciding data sets and solvers, you must prepare the data sets and
+install the solvers as well as the tools. Please see Sections 'Prepare Data
+Sets for Experiments', 'Installation for Experiments' for more details.
+
+Type
+
+% python ./figure4.py
+
+to compare solvers. The results are stored in the 'fig4/' directory.
+
+
+Compare Solvers for Linear RankSVM Using Respective Best Parameters
+===================================================================
+Edit 'figure5_6.py' to indicate solvers, evaluation criteria and data sets for
+comparison.
+See the section for 'Compare Different Order-statistic Trees and the Direct
+Counting Method' for details.
+
+Type
+
+% python ./figure5_6.py
+
+to compare solvers. The results are stored in the 'fig5_6/' directory.
+
+
+Compare Solvers for Linear RankSVM Using Same Parameters
+===================================================================
+Edit 'figure7.py' to indicate solvers, parameters and data sets for
+comparison.
+See the section for 'Compare Different Order-statistic Trees and the Direct
+Counting Method' for details.
+
+Type
+
+% python ./figure7.py
+
+to compare solvers. The results are stored in the 'fig7/' directory.
+
+
+
+Compare Linear RankSVM with Linear SVR
+======================================
+Edit 'table5.py' to indicate solvers, evaluation criteria and data sets for
+comparison.
+See the section for 'Compare Different Order-statistic Trees and the Direct
+Counting Method' for details.
+
+Type
+
+% python ./table5.py
+
+to compare models. The results are printed in stdout.
+
+
+Results of Random Forest and GBDT
+=================================
+Edit 'table6.py' and 'table7.py' to indicate solvers and data sets for
+comparison.
+See the section for 'Compare Different Order-statistic Trees and the Direct
+Counting Method' for details.
+Note that 'table6.py' use a few trees and 'table7.py' use much more trees.
+
+Type
+
+% python ./table6.py
+% python ./table7.py
+
+to compare models. The results are printed in stdout.
+
+
+Compare Linear RankSVM Using All Pairs and Partial Pairs
+========================================================
+Edit 'table10.py' to indicate data sets for comparison.
+See the section for 'Compare Different Order-statistic Trees and the Direct
+Counting Method' for details.
+
+Type
+
+% python ./table10.py
+
+to compare models. The results are printed in stdout.
+
+
+Prepare Data Sets for Experiments
+=================================
+Please download those data sets you are interested in from the following sites
+and put them in the directory './data/'.
+You do not need to extract the zip/rar/tgz files.
+After all downloads are finished, type
+
+% python ./gen_data.py
+
+The script will extract all data sets and conduct pre-processing tasks.
+You can also edit 'gen_data.py' to comment the data sets you are not interested in. For example:
+#data_dict['YAHOO_SET1'] = 'YAHOO/'
+
+For LETOR data sets:
+Download the rar files from
+http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2007.rar
+http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2008.rar
+http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2007-list.rar
+http://research.microsoft.com/en-us/um/beijing/projects/letor/LETOR4.0/Data/MQ2008-list.rar
+The four urls are for MQ2007, MQ2008, MQ2007-list and MQ2008-list,
+respectively.
+
+For MSLR data set:
+Download the zip file from
+http://research.microsoft.com/en-us/um/beijing/projects/mslr/data/MSLR-WEB30K.zip
+
+For Yahoo Learning to Rank Challenge data sets:
+Download the tgz file by entering the following page
+http://webscope.sandbox.yahoo.com/catalog.php?datatype=c
+and select the data "C14 - Yahoo! Learning to Rank Challenge (421 MB)".
+
+
+Installation for Experiments
+============================
+To start the experiemtns, you must install the tools and the solvers first.
+Please see the following descriptions for the tools and the solvers.
+
+
+Prepare Tools for Data Pre-processing and Performance Evaluation
+================================================================
+The tools for the experiments are put in the 'tools' directory. It must be
+installed before any experiment.
+To install the tools, please type the following commands.
+
+% make -C tools
+
+
+Install Solvers of L2-loss Linear RankSVM and Linear SVR for Experiments
+========================================================================
+% cd liblinear
+$ make clean all
+
+
+Install TreeRankSVM
+===================
+Download the zip file from
+http://staff.cs.utu.fi/~aatapa/software/RankSVM/RankSVM.zip
+and install all its software dependencies listed on
+http://staff.cs.utu.fi/~aatapa/software/RankSVM/#software-dependencies
+
+Note that the patch only works for version 0.1 of TreeRankSVM.
+If you find the patch does not work, please email cjlin@csie.ntu.edu.tw
+
+% unzip RankSVM.zip
+% cd RankSVM
+% patch -p1 < ../patch/RankSVM.patch
+% make -C ../tools
+% python setup.py build_ext --inplace
+
+
+Install Rt-Rank
+===============
+Download the zip file from
+https://sites.google.com/site/rtranking/download/rt-rank.zip?attredirects=0&d=1
+You need Boost Threading libraries to install Rt-Rank.
+See more compilation details in
+https://sites.google.com/site/rtranking/how-to-use
+
+Note that the patch only works for version 1.0 of Rt-Rank.
+If you find the patch does not work, please email cjlin@csie.ntu.edu.tw
+
+% unzip rt-rank.zip
+% cd rt-rank
+% patch -p1 < ../patch/rt-rank.patch
+% cd cart
+% make
+
+Install pGBRT
+===============
+Download the tgz file from
+http://machinelearning.wustl.edu/uploads/pgbrt.tar.gz
+You need a recent distribution of MPI to install and run pGBRT.
+See more details in
+http://machinelearning.wustl.edu/pmwiki.php/Main/Pgbrt
+
+Note that the patch only works for version 0.9 of pGBRT.
+If you find the patch does not work, please email cjlin@csie.ntu.edu.tw
+
+% tar -zxvf pgbrt.tar.gz
+% cd pgbrt
+% patch -p1 < ../patch/pgbrt.patch
+% cd source
+% make
