@@ -1,5 +1,5 @@
-inputlist = {'MSLR','YAHOO_SET1','MQ2007-list','MQ2008-list'};
-solver = {'direct-count','y-rbtree','wx-rbtree','selectiontree','y-avltree','y-aatree'};
+inputlist = {'MQ2007','MQ2008'};
+solver = {'y-avltree'};
 for i = 1:length(inputlist)
 	grad0=0;
 	stop=zeros(length(solver),1);

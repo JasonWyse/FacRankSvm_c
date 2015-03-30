@@ -1,0 +1,37 @@
+liblinear/train -c 1 -e 1e-20 -s 7 data/MQ2008/Fold1/train.txt /dev/null >> log/MQ2008.y-avltree.fig4.log
+FUN 5.232500000000000e+04 TIME 1.000000000000000e-02
+iter  1 act 1.997e+04 pre 1.947e+04 delta 6.040e-01 f 5.2325000000000000e+04 |g| 7.230e+04 CG   2
+FUN 3.235967790330690e+04 TIME 2.000000000000000e-02
+cg reaches trust region boundary
+iter  2 act 1.931e+03 pre 1.827e+03 delta 6.740e-01 f 3.2359677903306903e+04 |g| 8.616e+03 CG   4
+FUN 3.042886725991277e+04 TIME 5.000000000000000e-02
+cg reaches trust region boundary
+iter  3 act 6.400e+02 pre 6.137e+02 delta 7.075e-01 f 3.0428867259912771e+04 |g| 2.884e+03 CG   5
+FUN 2.978890462132614e+04 TIME 9.000000000000000e-02
+cg reaches trust region boundary
+iter  4 act 1.309e+02 pre 1.294e+02 delta 7.324e-01 f 2.9788904621326143e+04 |g| 7.748e+02 CG  10
+FUN 2.965798625035810e+04 TIME 2.000000000000000e-01
+cg reaches trust region boundary
+iter  5 act 4.128e+01 pre 4.104e+01 delta 7.466e-01 f 2.9657986250358103e+04 |g| 2.178e+02 CG  11
+FUN 2.961670234413674e+04 TIME 3.100000000000000e-01
+cg reaches trust region boundary
+iter  6 act 2.448e+01 pre 2.443e+01 delta 8.162e-01 f 2.9616702344136738e+04 |g| 1.543e+02 CG  13
+FUN 2.959222098410515e+04 TIME 4.400000000000000e-01
+cg reaches trust region boundary
+iter  7 act 1.674e+01 pre 1.672e+01 delta 8.285e-01 f 2.9592220984105148e+04 |g| 1.377e+02 CG  17
+FUN 2.957548590763674e+04 TIME 6.200000000000000e-01
+cg reaches trust region boundary
+iter  8 act 7.040e+00 pre 7.059e+00 delta 8.368e-01 f 2.9575485907636739e+04 |g| 7.733e+01 CG  37
+FUN 2.956844568426361e+04 TIME 9.800000000000000e-01
+cg reaches trust region boundary
+iter  9 act 1.416e+00 pre 1.413e+00 delta 8.368e-01 f 2.9568445684263614e+04 |g| 3.537e+01 CG  36
+FUN 2.956702962804724e+04 TIME 1.290000000000000e+00
+iter 10 act 3.292e-01 pre 3.294e-01 delta 8.368e-01 f 2.9567029628047243e+04 |g| 3.211e+01 CG  29
+FUN 2.956670043019330e+04 TIME 1.560000000000000e+00
+iter 11 act 1.721e-01 pre 1.722e-01 delta 8.368e-01 f 2.9566700430193298e+04 |g| 2.842e+00 CG  52
+FUN 2.956652833842650e+04 TIME 2.050000000000000e+00
+iter 12 act 5.492e-03 pre 5.492e-03 delta 8.368e-01 f 2.9566528338426499e+04 |g| 1.779e-01 CG  71
+FUN 2.956652284637665e+04 TIME 2.720000000000000e+00
+iter 13 act 7.203e-10 pre 6.286e-10 delta 8.368e-01 f 2.9566522846376651e+04 |g| 2.814e-03 CG   5
+WARNING: actred and prered too small
+Training time = 2.77
