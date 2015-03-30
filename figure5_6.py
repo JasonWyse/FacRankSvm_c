@@ -3,8 +3,8 @@ import os
 from os import system,popen
 
 #remove those method/data/criterion you are not interested in its result
-methodlist = ['tree-tron','prsvm+','treeranksvm']
-data = ['MQ2007','MQ2008','MSLR','YAHOO_SET1','YAHOO_SET2','MQ2007-list','MQ2008-list']
+methodlist = ['tree-tron']#,'prsvm+','treeranksvm'
+data = ['MQ2007','MQ2008']#,'MSLR','YAHOO_SET1','YAHOO_SET2','MQ2007-list','MQ2008-list'
 criteria = ['pairwise-accuracy','ndcg']
 
 m_file = {'pairwise-accuracy':'acc','ndcg':'ndcg'}

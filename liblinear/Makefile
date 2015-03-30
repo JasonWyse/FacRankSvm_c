@@ -1,6 +1,10 @@
 CXX ?= g++
 CC ?= gcc
-CFLAGS = -Wall -Wconversion -O3 -fPIC
+CFLAGS = -Wall -Wconversion -O3 -fPIC 
+# -Wall: Generally we use this option，it allows gcc to output all useful warnings。use -W{warning} to mark the labeled warning
+#-Wconversion: Its original purpose was helping to translate old C code to modern C standards by identifying the places where adding function prototypes may result in different behaviour. The new Wconversion option warns for any implicit conversion that may change a value
+# -03:compiler's 4 level optimization choices，-O0:no optimization,-O1:default value，-O3:highest value
+#-fPIC: 编译器就输出位置无关目标码.适用于动态连接(dynamic linking),即使分支需要大范围转移
 LIBS = blas/blas.a
 #LIBS = -lblas
 
